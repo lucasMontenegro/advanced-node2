@@ -37,7 +37,7 @@ if (process.env.ENABLE_DEBUGGING == 'true') {
 
 // Enable to pass the challenge called "Advanced Node and Express - 
 // Registration of New Users"
-if (process.env.ENABLE_DECOY) app.use((req, res, next) => {
+if (process.env.ENABLE_DELAY_SCHEME) app.use((req, res, next) => {
   switch (req.method) {
     case 'GET':
       switch (req.url) {
