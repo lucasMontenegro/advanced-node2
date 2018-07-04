@@ -1,10 +1,2 @@
 
 **FreeCodeCamp**
-
-.env contents:
-```
-SESSION_SECRET=
-DATABASE=
-ENABLE_DEBUGGING=
-ENABLE_DELAY_SCHEME=
-```
