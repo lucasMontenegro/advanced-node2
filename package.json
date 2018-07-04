@@ -15,7 +15,12 @@
 		"cors": "^2.8.1",
 		"body-parser": "^1.16.0",
 		"mongodb": "^2.2.22",
-		"helmet": "^3.4.0"
+		"helmet": "^3.4.0",
+ 	 	"pug": "^2.0.3",
+ 	 	"passport": "^0.4.0",
+ 	 	"express-session": "^1.15.6",
+ 	 	"passport-local": "^1.0.0",
+ 	 	"bcrypt": "^2.0.1"
 	},
 	"engines": {
 		"node": "4.4.3"
