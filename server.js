@@ -8,7 +8,41 @@ const passport      = require('passport');
 const session       = require('express-session');
 const ObjectID      = require('mongodb').ObjectID;
 const LocalStrategy = require('passport-local');
+
+
 const bcrypt        = require('bcrypt');
+let comparePassword;
+let newHash;
+switch (process.env.HASHING) {
+
+  case 'sync':
+    comparePassword = (password, hash, cb) => {
+      cb(null, bcrypt.compareSync(password, hash));
+    }
+    newHash = (password, saltRounds, cb) => {
+      cb(null, bcrypt.hashSync(password, saltRounds));
+    }
+    break;
+
+  case 'async':
+    comparePassword = (password, hash, cb) => {
+      bcrypt.compare(password, hash, cb);
+    }
+    newHash = (password, saltRounds, cb) => {
+      bcrypt.hash(password, saltRounds, cb);
+    }
+    break;
+
+  default:
+    comparePassword = (password, hash, cb) => {
+      cb(null, password != hash);
+    }
+    newHash = (password, saltRounds, cb) => {
+      cb(null, password);
+    }
+    break;
+}
+
 
 function ensureAuthenticated (req, res, next) {
   if (req.isAuthenticated()) return next();
@@ -82,12 +116,13 @@ mongo.connect(process.env.DATABASE, (err, connection) => {
     db.collection('users').findOne(
       { username: username },
       (err, user) => {
-        if (err) return done(err);
-        if (!user) return done(null, false);
-        if (!bcrypt.compare(password, user.password)) {
-          return done(null, false);
-        }
-        return done(null, user);
+        if (err) done(err);
+        else if (!user) done(null, false);
+        else comparePassword(password, user.password, (err, match) => {
+          if (err) done(err);
+          else if (match) done(null, false);
+          else done(null, user);
+        });
       }
     );
   }));
@@ -126,16 +161,19 @@ mongo.connect(process.env.DATABASE, (err, connection) => {
         (err, user) => {
           if (err) next(err);
           else if (user) res.redirect('/');
-          else db.collection('users').insertOne(
-            {
-              username: req.body.username,
-              password: bcrypt.hash(req.body.password, 12)
-            },
-            (err, user) => {
-              if (err) res.redirect('/');
-              else next();
-            }
-          );
+          else newHash(req.body.password, 12, (err, hash) => {
+            if (err) next(err);
+            else db.collection('users').insertOne(
+              {
+                username: req.body.username,
+                password: hash
+              },
+              (err, user) => {
+                if (err) res.redirect('/');
+                else next();
+              }
+            );
+          });
         }
       ),
       passport.authenticate('local', {
